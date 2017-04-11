@@ -1,13 +1,5 @@
 ﻿using Interfaces;
-using Microsoft.CSharp;
 using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpaceyOS
 {
@@ -15,27 +7,25 @@ namespace SpaceyOS
     {
         static void Main(string[] args)
         {
-            Terminal terminal = new Terminal();
+            SpaceyOS spaceyOS = new SpaceyOS();
             ResetColour();
 
-            AssemblyCompiler compiler = new AssemblyCompiler(new[] { @"ForceFieldAPI.csx" });
+            //AssemblyCompiler compiler = new AssemblyCompiler(new[] { @"ForceFieldAPI.csx" });
+            //SpaceShip ship = new SpaceShip();
+            //var ff = new ForceField(ship);
+            //var ffa = (IForceFieldAPI)compiler.CreateInstance("ForceFieldAPI");
+            //ffa.Init(ship, ff);
+            //ff.API = ffa;
 
+            //ship.ShipSystem.Add(new ForceField(ship));
 
-            SpaceShip ship = new SpaceShip();
-            var ff = new ForceField(ship);
-            var ffa = (IForceFieldAPI)compiler.CreateInstance("ForceFieldAPI");
-            ffa.Init(ship, ff);
-            ff.API = ffa;
+            //ff.MockHit();
 
-            ship.ShipSystem.Add(new ForceField(ship));
-
-            ff.MockHit();
-
-            while (!terminal.Exit)
+            while (!spaceyOS.Exit)
             {
-                Console.Write($"{terminal.WorkingDirectory}: ");
+                Console.Write($"{spaceyOS.WorkingDirectory}: ");
                 var input = Console.ReadLine();
-                var ret = terminal.ReadLine(input);
+                var ret = spaceyOS.ReadLine(input);
                 foreach (var line in ret)
                 {
                     if (line.OverwriteColour)
@@ -57,27 +47,5 @@ namespace SpaceyOS
         }
 
 
-    }
-
-    class Api : IForceFieldAPI
-    {
-        public ISpaceShip SpaceShip { get; set; }
-        public IForceField ForceField { get; set; }
-
-        public Api(ISpaceShip spaceShip, IForceField forceField)
-        {
-            Init(spaceShip, forceField);
-        }
-
-        public void OnHit(int frequency)
-        {
-            Console.WriteLine("I'm hit");
-        }
-
-        public void Init(ISpaceShip spaceShip, IForceField forceField)
-        {
-            SpaceShip = spaceShip;
-            ForceField = forceField;
-        }
     }
 }

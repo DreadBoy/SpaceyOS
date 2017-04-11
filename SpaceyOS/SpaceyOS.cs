@@ -8,13 +8,12 @@ using System.Threading.Tasks;
 
 namespace SpaceyOS
 {
-    class Terminal
+    class SpaceyOS
     {
         bool _exit = false;
         public bool Exit { get { return _exit; } private set { } }
 
         DirectoryInfo rootDirectory;
-
 
         DirectoryInfo workingDirectory;
         public string WorkingDirectory
@@ -39,12 +38,12 @@ namespace SpaceyOS
             workingDirectory = rootDirectory = new DirectoryInfo(rootFolder);
         }
 
-        public Terminal()
+        public SpaceyOS()
         {
             Init("SpaceyOS");
         }
 
-        public Terminal(string rootFolder)
+        public SpaceyOS(string rootFolder)
         {
             Init(rootFolder);
         }
@@ -231,6 +230,11 @@ namespace SpaceyOS
 
                 Process.Start(file);
 
+            }
+            else if (command.Command == "compile")
+            {
+                var sources = workingDirectory.GetFiles("*.csx", SearchOption.AllDirectories).Select(f => f.FullName);
+                AssemblyCompiler compiler = new AssemblyCompiler(sources.ToArray());
             }
             else
                 return new TerminalLine[] { new TerminalLine("command not find", ConsoleColor.Red) };
