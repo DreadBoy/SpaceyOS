@@ -48,6 +48,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SpaceShip.cs" />
     <Compile Include="SpaceyOS.cs" />
+    <Compile Include="StaticRandom.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

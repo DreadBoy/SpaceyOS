@@ -9,11 +9,11 @@ namespace SpaceyOS
 {
     class SpaceShip : ISpaceShip
     {
-        public List<IShipSystem> ShipSystem { get; set; } = new List<IShipSystem>();
+        public List<IComp> ShipComps { get; set; } = new List<IComp>();
 
         public SpaceShip()
         {
-            ShipSystem.Add(new ForceField(this));
+
         }
     }
 }

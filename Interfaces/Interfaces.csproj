@@ -40,10 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IComponent.cs" />
-    <Compile Include="IForceFieldAPI.cs" />
-    <Compile Include="IForceField.cs" />
-    <Compile Include="IShipSystem.cs" />
+    <Compile Include="ForceFieldSnipp.cs" />
+    <Compile Include="IForceFieldSnipp.cs" />
+    <Compile Include="IForceFieldComp.cs" />
+    <Compile Include="IComp.cs" />
+    <Compile Include="ISnipp.cs" />
     <Compile Include="ISpaceShip.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

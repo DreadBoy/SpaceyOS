@@ -7,11 +7,14 @@ namespace SpaceyOS
     {
         static void Main(string[] args)
         {
-            SpaceyOS spaceyOS = new SpaceyOS();
+            SpaceShip ship = new SpaceShip();
+            ship.ShipComps.Add(new ForceField(ship));
+            //ship.ShipComps.Add(new ForceField(ship));
+
+            SpaceyOS spaceyOS = new SpaceyOS(ship);
             ResetColour();
 
             //AssemblyCompiler compiler = new AssemblyCompiler(new[] { @"ForceFieldAPI.csx" });
-            //SpaceShip ship = new SpaceShip();
             //var ff = new ForceField(ship);
             //var ffa = (IForceFieldAPI)compiler.CreateInstance("ForceFieldAPI");
             //ffa.Init(ship, ff);
@@ -49,3 +52,14 @@ namespace SpaceyOS
 
     }
 }
+
+
+/*
+ * TODO 
+ *
+ * 'system' pokaže informacije o OS in ladji
+ * 'system comps' pokaže vse komponente na ladji
+ * 'comp <id>' pokaže infomacije o komponenti, tudi pripete snippe
+ * 'comp <id> attach <id_snipp>
+ * 'comp <id> deattach <id_snipp>
+ */

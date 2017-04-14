@@ -7,19 +7,26 @@ using Interfaces;
 
 namespace SpaceyOS
 {
-    class ForceField : IForceField
+    class ForceField : IForceFieldComp
     {
-        public IForceFieldAPI API { get; set; }
+        public Dictionary<string, ISnipp> Snipps { get; set; } = new Dictionary<string, ISnipp>();
+        public string Id { get; set; }
+
         ISpaceShip spaceShip;
 
-        public ForceField (ISpaceShip spaceShip)
+        public ForceField(ISpaceShip spaceShip)
         {
             this.spaceShip = spaceShip;
+            Id = StaticRandom.Rand().ToString("X").Substring(0, 4).ToLower();
         }
 
         public void MockHit()
         {
-            API.OnHit(5);
+            foreach (var snipp in Snipps.Values)
+            {
+                //TODO what happenes if cast fails?
+                ((IForceFieldSnipp)snipp).OnHit(5);
+            }
         }
     }
 }

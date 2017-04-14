@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +13,10 @@ namespace SpaceyOS
     {
         bool _exit = false;
         public bool Exit { get { return _exit; } private set { } }
+
+        SpaceShip ship;
+
+        AssemblyCompiler compiler;
 
         DirectoryInfo rootDirectory;
 
@@ -31,21 +36,24 @@ namespace SpaceyOS
             private set { }
         }
 
-        void Init(string rootFolder)
+        void Init(SpaceShip ship, string rootFolder)
         {
             if (!Directory.Exists(rootFolder))
                 Directory.CreateDirectory(rootFolder);
             workingDirectory = rootDirectory = new DirectoryInfo(rootFolder);
+            this.ship = ship;
+
+            Compile();
         }
 
-        public SpaceyOS()
+        public SpaceyOS(SpaceShip ship)
         {
-            Init("SpaceyOS");
+            Init(ship, "SpaceyOS");
         }
 
-        public SpaceyOS(string rootFolder)
+        public SpaceyOS(SpaceShip ship, string rootFolder)
         {
-            Init(rootFolder);
+            Init(ship, rootFolder);
         }
 
         public TerminalLine[] ReadLine(string line)
@@ -233,8 +241,77 @@ namespace SpaceyOS
             }
             else if (command.Command == "compile")
             {
-                var sources = workingDirectory.GetFiles("*.csx", SearchOption.AllDirectories).Select(f => f.FullName);
-                AssemblyCompiler compiler = new AssemblyCompiler(sources.ToArray());
+                Compile();
+            }
+            else if (command.Command == "system")
+            {
+                if (command.Parameters.Count == 0)
+                    return new TerminalLine[] { new TerminalLine("spaceyOS v0.0.1"), new TerminalLine("***ship info***"), new TerminalLine("starblitz mk1"), new TerminalLine($"{ ship.ShipComps.Count} attached comp{(ship.ShipComps.Count == 1 ? "" : "s")}") };
+                if (command.Parameters.Count == 1 && command.Parameters[0] == "comps")
+                {
+                    if (ship.ShipComps.Count == 0)
+                        return new TerminalLine[] { new TerminalLine("no comps found") };
+                    return new TerminalLine[] { new TerminalLine("***ship comps***") }.Concat(ship.ShipComps.Select(c => new TerminalLine($"{c.GetType().Name} - {c.Id}"))).ToArray();
+                }
+                return new TerminalLine[] { new TerminalLine("invalid operands") };
+            }
+            else if (command.Command == "comp")
+            {
+                //comp <id>
+                //comp <id> attach|detach|reattach <comp_id>
+                if (command.Parameters.Count == 0)
+                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+
+                var comp = ship.ShipComps.FirstOrDefault(c => string.Compare(c.Id, command.Parameters[0], true) == 0);
+                if (comp == null)
+                    return new TerminalLine[] { new TerminalLine("comp not found", ConsoleColor.Red) };
+
+                if (command.Parameters.Count == 1)
+                {
+                    var snipps = comp.Snipps.Select(kv => new TerminalLine(kv.Key));
+                    var ret = new List<TerminalLine>() {
+                        new TerminalLine($"comp {comp.Id}"),
+                    };
+                    if (snipps.Count() == 0)
+                        return ret.Concat(new TerminalLine[] { new TerminalLine("no snipps attached") }).ToArray();
+                    else
+                        return ret.Concat(new TerminalLine[] { new TerminalLine("***attached snipps***") }).Concat(snipps).ToArray();
+                }
+
+                if (command.Parameters.Count == 3)
+                {
+                    if (command.Parameters[1] == "attach")
+                    {
+                        if (comp.Snipps.ContainsKey(command.Parameters[2]))
+                            return new TerminalLine[] { new TerminalLine("comp already attached, use detach|reattach instead") };
+
+                        if (!AttachSnippToComp(ship, comp, command.Parameters[2]))
+                            return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
+                        return new TerminalLine[0];
+
+                    }
+                    if (command.Parameters[1] == "detach")
+                    {
+                        if (!comp.Snipps.ContainsKey(command.Parameters[2]))
+                            return new TerminalLine[] { new TerminalLine("attached snipp not found") };
+
+                        comp.Snipps.Remove(command.Parameters[2]);
+                        return new TerminalLine[0];
+                    }
+                    if (command.Parameters[1] == "reattach")
+                    {
+                        if (comp.Snipps.ContainsKey(command.Parameters[2]))
+                            comp.Snipps.Remove(command.Parameters[2]);
+
+                        if (!AttachSnippToComp(ship, comp, command.Parameters[2]))
+                            return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
+                        return new TerminalLine[0];
+                    }
+                }
+                return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+
+
+
             }
             else
                 return new TerminalLine[] { new TerminalLine("command not find", ConsoleColor.Red) };
@@ -254,6 +331,23 @@ namespace SpaceyOS
             return new TerminalLine[] {
                 new TerminalLine("operation failed", ConsoleColor.Red),
                 new TerminalLine(e.Message.Replace(rootDirectory.FullName, "").Replace(@"\", "/"), ConsoleColor.Red) };
+        }
+
+        void Compile()
+        {
+            var sources = workingDirectory.GetFiles("*.csx", SearchOption.AllDirectories).Select(f => f.FullName);
+            compiler = new AssemblyCompiler(sources.ToArray());
+        }
+
+        bool AttachSnippToComp(ISpaceShip ship, IComp comp, string name)
+        {
+            var snipp = (ISnipp)compiler.CreateInstance(name);
+            if (snipp == null)
+                return false;
+            snipp.SpaceShip = ship;
+            snipp.Comp = comp;
+            comp.Snipps.Add(name, snipp);
+            return true;
         }
     }
 

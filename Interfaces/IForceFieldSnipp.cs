@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 
 namespace Interfaces
 {
-    public interface IForceFieldAPI
+    public interface IForceFieldSnipp : ISnipp
     {
-        ISpaceShip SpaceShip { get; set; }
-        IForceField ForceField { get; set; }
-
-        void Init(ISpaceShip spaceShip, IForceField forceField);
-
         void OnHit(int frequency);
     }
 }

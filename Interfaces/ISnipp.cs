@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Interfaces
 {
-    public interface IForceField : IShipSystem
+    public interface ISnipp
     {
+        ISpaceShip SpaceShip { get; set; }
+        IComp Comp { get; set; }
     }
 }

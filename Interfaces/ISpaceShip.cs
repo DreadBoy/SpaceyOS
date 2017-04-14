@@ -8,6 +8,6 @@ namespace Interfaces
 {
     public interface ISpaceShip
     {
-        List<IShipSystem> ShipSystem { get; set; }
+        List<IComp> ShipComps { get; set; }
     }
 }

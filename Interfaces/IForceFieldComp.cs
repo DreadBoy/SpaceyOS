@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace Interfaces
 {
-    public interface IComponent
+    public interface IForceFieldComp : IComp
     {
-        int DoWork();
     }
 }

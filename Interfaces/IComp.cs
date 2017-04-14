@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Interfaces
 {
-    public interface IShipSystem
+    public interface IComp
     {
+        string Id { get; set; }
+        Dictionary<string, ISnipp> Snipps { get; set; }
     }
 }
