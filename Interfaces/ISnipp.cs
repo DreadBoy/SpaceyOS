@@ -9,6 +9,6 @@ namespace Interfaces
     public interface ISnipp
     {
         ISpaceShip SpaceShip { get; set; }
-        IComp Comp { get; set; }
+        IComp BaseComp { get; set; }
     }
 }

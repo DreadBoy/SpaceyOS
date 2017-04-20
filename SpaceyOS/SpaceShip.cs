@@ -15,5 +15,15 @@ namespace SpaceyOS
         {
 
         }
+
+        public void GotHit()
+        {
+            foreach (var comp in ShipComps)
+            {
+                if (!(comp is IForceFieldComp)) continue;
+                var forceField = (IForceFieldComp) comp;
+                forceField.GotHit(500);
+            }
+        }
     }
 }

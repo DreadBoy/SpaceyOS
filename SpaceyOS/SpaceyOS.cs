@@ -11,22 +11,22 @@ namespace SpaceyOS
 {
     class SpaceyOS
     {
-        bool _exit = false;
+        private bool _exit = false;
         public bool Exit { get { return _exit; } private set { } }
 
-        SpaceShip ship;
+        private SpaceShip _ship;
 
-        AssemblyCompiler compiler;
+        private AssemblyCompiler _compiler;
 
-        DirectoryInfo rootDirectory;
+        private DirectoryInfo _rootDirectory;
 
-        DirectoryInfo workingDirectory;
+        private DirectoryInfo _workingDirectory;
         public string WorkingDirectory
         {
             get
             {
-                var name = workingDirectory.FullName;
-                var index = name.IndexOf(rootDirectory.FullName) + rootDirectory.FullName.Length;
+                var name = _workingDirectory.FullName;
+                var index = name.IndexOf(_rootDirectory.FullName, StringComparison.Ordinal) + _rootDirectory.FullName.Length;
                 var ret = name.Substring(index);
                 if (ret.Length == 0)
                     ret = @"\";
@@ -40,10 +40,14 @@ namespace SpaceyOS
         {
             if (!Directory.Exists(rootFolder))
                 Directory.CreateDirectory(rootFolder);
-            workingDirectory = rootDirectory = new DirectoryInfo(rootFolder);
-            this.ship = ship;
+            _workingDirectory = _rootDirectory = new DirectoryInfo(rootFolder);
+            this._ship = ship;
 
             Compile();
+
+            //TODO Remove that test configuration
+            AttachSnippToComp(_ship, _ship.ShipComps[0], "FrontShield");
+            ((IForceFieldComp)_ship.ShipComps[0]).SetFrequency(500);
         }
 
         public SpaceyOS(SpaceShip ship)
@@ -70,7 +74,7 @@ namespace SpaceyOS
             }
             else if (command.Command == "ls")
             {
-                var path = workingDirectory.FullName;
+                var path = _workingDirectory.FullName;
 
                 if (command.Parameters.Count >= 1)
                     path = GetFullPath(command.Parameters[0]);
@@ -101,7 +105,7 @@ namespace SpaceyOS
                 if (command.Parameters.Count != 1)
                     return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
 
-                Directory.CreateDirectory(Path.Combine(workingDirectory.FullName, command.Parameters[0]));
+                Directory.CreateDirectory(Path.Combine(_workingDirectory.FullName, command.Parameters[0]));
 
             }
             else if (command.Command == "rmdir")
@@ -114,7 +118,7 @@ namespace SpaceyOS
 
                 if (!Directory.Exists(target))
                     return new TerminalLine[] { new TerminalLine("directory does not exist", ConsoleColor.Red) };
-                if (Directory.EnumerateFileSystemEntries(target).Count() > 0 && !recursive)
+                if (Directory.EnumerateFileSystemEntries(target).Any() && !recursive)
                     return new TerminalLine[] { new TerminalLine("directory is not empty, use -r flag", ConsoleColor.Red) };
                 try
                 {
@@ -131,15 +135,15 @@ namespace SpaceyOS
                 if (command.Parameters.Count != 1)
                     return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
 
-                var target = workingDirectory;
+                var target = _workingDirectory;
 
                 if (command.Parameters[0] == "..")
                 {
-                    if (workingDirectory.FullName != rootDirectory.FullName)
-                        workingDirectory = workingDirectory.Parent;
+                    if (_workingDirectory.FullName != _rootDirectory.FullName)
+                        _workingDirectory = _workingDirectory.Parent;
                 }
                 else
-                    workingDirectory = new DirectoryInfo(GetFullPath(command.Parameters[0]));
+                    _workingDirectory = new DirectoryInfo(GetFullPath(command.Parameters[0]));
 
             }
             else if (command.Command == "cp")
@@ -234,7 +238,7 @@ namespace SpaceyOS
 
                 var file = GetFullPath(command.Parameters[0]);
                 if (!File.Exists(file))
-                    return new TerminalLine[] { new TerminalLine("file already exists, use -o to overvrite", ConsoleColor.Red) };
+                    return new TerminalLine[] { new TerminalLine("file does not exist", ConsoleColor.Red) };
 
                 Process.Start(file);
 
@@ -246,12 +250,12 @@ namespace SpaceyOS
             else if (command.Command == "system")
             {
                 if (command.Parameters.Count == 0)
-                    return new TerminalLine[] { new TerminalLine("spaceyOS v0.0.1"), new TerminalLine("***ship info***"), new TerminalLine("starblitz mk1"), new TerminalLine($"{ ship.ShipComps.Count} attached comp{(ship.ShipComps.Count == 1 ? "" : "s")}") };
+                    return new TerminalLine[] { new TerminalLine("spaceyOS v0.0.1"), new TerminalLine("***ship info***"), new TerminalLine("starblitz mk1"), new TerminalLine($"{ _ship.ShipComps.Count} attached comp{(_ship.ShipComps.Count == 1 ? "" : "s")}") };
                 if (command.Parameters.Count == 1 && command.Parameters[0] == "comps")
                 {
-                    if (ship.ShipComps.Count == 0)
+                    if (_ship.ShipComps.Count == 0)
                         return new TerminalLine[] { new TerminalLine("no comps found") };
-                    return new TerminalLine[] { new TerminalLine("***ship comps***") }.Concat(ship.ShipComps.Select(c => new TerminalLine($"{c.GetType().Name} - {c.Id}"))).ToArray();
+                    return new TerminalLine[] { new TerminalLine("***ship comps***") }.Concat(_ship.ShipComps.Select(c => new TerminalLine($"{c.GetType().Name} - {c.Id}"))).ToArray();
                 }
                 return new TerminalLine[] { new TerminalLine("invalid operands") };
             }
@@ -262,7 +266,7 @@ namespace SpaceyOS
                 if (command.Parameters.Count == 0)
                     return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
 
-                var comp = ship.ShipComps.FirstOrDefault(c => string.Compare(c.Id, command.Parameters[0], true) == 0);
+                var comp = _ship.ShipComps.FirstOrDefault(c => string.Compare(c.Id, command.Parameters[0], true) == 0);
                 if (comp == null)
                     return new TerminalLine[] { new TerminalLine("comp not found", ConsoleColor.Red) };
 
@@ -285,7 +289,7 @@ namespace SpaceyOS
                         if (comp.Snipps.ContainsKey(command.Parameters[2]))
                             return new TerminalLine[] { new TerminalLine("comp already attached, use detach|reattach instead") };
 
-                        if (!AttachSnippToComp(ship, comp, command.Parameters[2]))
+                        if (!AttachSnippToComp(_ship, comp, command.Parameters[2]))
                             return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
                         return new TerminalLine[0];
 
@@ -303,15 +307,16 @@ namespace SpaceyOS
                         if (comp.Snipps.ContainsKey(command.Parameters[2]))
                             comp.Snipps.Remove(command.Parameters[2]);
 
-                        if (!AttachSnippToComp(ship, comp, command.Parameters[2]))
+                        if (!AttachSnippToComp(_ship, comp, command.Parameters[2]))
                             return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
                         return new TerminalLine[0];
                     }
                 }
                 return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
-
-
-
+            }
+            else if (command.Command == "test")
+            {
+                _ship.GotHit();
             }
             else
                 return new TerminalLine[] { new TerminalLine("command not find", ConsoleColor.Red) };
@@ -321,31 +326,31 @@ namespace SpaceyOS
         string GetFullPath(string path)
         {
             if (path.StartsWith("/"))
-                return Path.Combine(rootDirectory.FullName, path.Substring(1));
+                return Path.Combine(_rootDirectory.FullName, path.Substring(1));
             else
-                return Path.Combine(workingDirectory.FullName, path);
+                return Path.Combine(_workingDirectory.FullName, path);
         }
 
         TerminalLine[] HandleIoError(Exception e)
         {
             return new TerminalLine[] {
                 new TerminalLine("operation failed", ConsoleColor.Red),
-                new TerminalLine(e.Message.Replace(rootDirectory.FullName, "").Replace(@"\", "/"), ConsoleColor.Red) };
+                new TerminalLine(e.Message.Replace(_rootDirectory.FullName, "").Replace(@"\", "/"), ConsoleColor.Red) };
         }
 
         void Compile()
         {
-            var sources = workingDirectory.GetFiles("*.csx", SearchOption.AllDirectories).Select(f => f.FullName);
-            compiler = new AssemblyCompiler(sources.ToArray());
+            var sources = _workingDirectory.GetFiles("*.csx", SearchOption.AllDirectories).Select(f => f.FullName);
+            _compiler = new AssemblyCompiler(sources.ToArray());
         }
 
         bool AttachSnippToComp(ISpaceShip ship, IComp comp, string name)
         {
-            var snipp = (ISnipp)compiler.CreateInstance(name);
+            var snipp = (ISnipp)_compiler.CreateInstance(name);
             if (snipp == null)
                 return false;
             snipp.SpaceShip = ship;
-            snipp.Comp = comp;
+            snipp.BaseComp = comp;
             comp.Snipps.Add(name, snipp);
             return true;
         }

@@ -8,5 +8,8 @@ namespace Interfaces
 {
     public interface IForceFieldComp : IComp
     {
+        void SetFrequency(int frequency);
+
+        void GotHit(int frequency);
     }
 }

@@ -10,7 +10,10 @@ namespace SpaceyOS
     class ForceField : IForceFieldComp
     {
         public Dictionary<string, ISnipp> Snipps { get; set; } = new Dictionary<string, ISnipp>();
+
         public string Id { get; set; }
+
+        private int _frequency;
 
         ISpaceShip spaceShip;
 
@@ -20,13 +23,20 @@ namespace SpaceyOS
             Id = StaticRandom.Rand().ToString("X").Substring(0, 4).ToLower();
         }
 
-        public void MockHit()
+        public void GotHit(int frequency)
         {
+            if (frequency != _frequency)
+                return;
             foreach (var snipp in Snipps.Values)
             {
                 //TODO what happenes if cast fails?
-                ((IForceFieldSnipp)snipp).OnHit(5);
+                ((IForceFieldSnipp)snipp).OnHit(frequency);
             }
+        }
+
+        public void SetFrequency(int frequency)
+        {
+            this._frequency = frequency;
         }
     }
 }
