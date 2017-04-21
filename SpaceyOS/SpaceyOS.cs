@@ -12,7 +12,12 @@ namespace SpaceyOS
     class SpaceyOS
     {
         private bool _exit = false;
-        public bool Exit { get { return _exit; } private set { } }
+
+        public bool Exit
+        {
+            get { return _exit; }
+            private set { }
+        }
 
         private SpaceShip _ship;
 
@@ -21,12 +26,14 @@ namespace SpaceyOS
         private DirectoryInfo _rootDirectory;
 
         private DirectoryInfo _workingDirectory;
+
         public string WorkingDirectory
         {
             get
             {
                 var name = _workingDirectory.FullName;
-                var index = name.IndexOf(_rootDirectory.FullName, StringComparison.Ordinal) + _rootDirectory.FullName.Length;
+                var index = name.IndexOf(_rootDirectory.FullName, StringComparison.Ordinal) +
+                            _rootDirectory.FullName.Length;
                 var ret = name.Substring(index);
                 if (ret.Length == 0)
                     ret = @"\";
@@ -47,7 +54,7 @@ namespace SpaceyOS
 
             //TODO Remove that test configuration
             AttachSnippToComp(_ship, _ship.ShipComps[0], "FrontShield");
-            ((IForceFieldComp)_ship.ShipComps[0]).SetFrequency(500);
+            ((IForceFieldComp) _ship.ShipComps[0]).SetFrequency(500);
         }
 
         public SpaceyOS(SpaceShip ship)
@@ -70,7 +77,7 @@ namespace SpaceyOS
 
             if (!SpaceyCommand.TryParse(line, out SpaceyCommand command))
             {
-                return new TerminalLine[] { new TerminalLine("invalid command") };
+                return new TerminalLine[] {new TerminalLine("invalid command")};
             }
             else if (command.Command == "ls")
             {
@@ -80,20 +87,21 @@ namespace SpaceyOS
                     path = GetFullPath(command.Parameters[0]);
 
                 if (!Directory.Exists(path))
-                    return new TerminalLine[] { new TerminalLine("directory does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("directory does not exist", ConsoleColor.Red)};
                 try
                 {
-                    var filesAndFolders = Directory.GetFileSystemEntries(path).Select(ff =>
-                    {
-                        var filename = Path.GetFileName(ff);
-                        if (File.Exists(ff))
-                            return new TerminalLine(filename, ConsoleColor.White);
-                        else if (Directory.Exists(ff))
-                            return new TerminalLine(filename, ConsoleColor.Cyan);
-                        return new TerminalLine(filename);
-                    }).ToArray();
+                    var filesAndFolders = Directory.GetFileSystemEntries(path)
+                        .Select(ff =>
+                        {
+                            var filename = Path.GetFileName(ff);
+                            if (File.Exists(ff))
+                                return new TerminalLine(filename, ConsoleColor.White);
+                            else if (Directory.Exists(ff))
+                                return new TerminalLine(filename, ConsoleColor.Cyan);
+                            return new TerminalLine(filename);
+                        })
+                        .ToArray();
                     return filesAndFolders;
-
                 }
                 catch (Exception e)
                 {
@@ -103,23 +111,23 @@ namespace SpaceyOS
             else if (command.Command == "mkdir")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 Directory.CreateDirectory(Path.Combine(_workingDirectory.FullName, command.Parameters[0]));
-
             }
             else if (command.Command == "rmdir")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var target = GetFullPath(command.Parameters[0]);
                 var recursive = command.Flags.Contains("-r");
 
                 if (!Directory.Exists(target))
-                    return new TerminalLine[] { new TerminalLine("directory does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("directory does not exist", ConsoleColor.Red)};
                 if (Directory.EnumerateFileSystemEntries(target).Any() && !recursive)
-                    return new TerminalLine[] { new TerminalLine("directory is not empty, use -r flag", ConsoleColor.Red) };
+                    return new TerminalLine[]
+                        {new TerminalLine("directory is not empty, use -r flag", ConsoleColor.Red)};
                 try
                 {
                     Directory.Delete(target, recursive);
@@ -128,12 +136,11 @@ namespace SpaceyOS
                 {
                     return HandleIoError(e);
                 }
-
             }
             else if (command.Command == "cd")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var target = _workingDirectory;
 
@@ -144,21 +151,21 @@ namespace SpaceyOS
                 }
                 else
                     _workingDirectory = new DirectoryInfo(GetFullPath(command.Parameters[0]));
-
             }
             else if (command.Command == "cp")
             {
                 if (command.Parameters.Count != 2)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var file1 = GetFullPath(command.Parameters[0]);
                 var file2 = GetFullPath(command.Parameters[1]);
                 var overwrite = command.Flags.Contains("-o");
 
                 if (!File.Exists(file1))
-                    return new TerminalLine[] { new TerminalLine("source file does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("source file does not exist", ConsoleColor.Red)};
                 if (File.Exists(file2) && !overwrite)
-                    return new TerminalLine[] { new TerminalLine("destination file already exists, use -o to overwrite", ConsoleColor.Red) };
+                    return new TerminalLine[]
+                        {new TerminalLine("destination file already exists, use -o to overwrite", ConsoleColor.Red)};
 
                 try
                 {
@@ -172,16 +179,17 @@ namespace SpaceyOS
             else if (command.Command == "mv")
             {
                 if (command.Parameters.Count != 2)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var file1 = GetFullPath(command.Parameters[0]);
                 var file2 = GetFullPath(command.Parameters[1]);
                 var overwrite = command.Flags.Contains("-o");
 
                 if (!File.Exists(file1))
-                    return new TerminalLine[] { new TerminalLine("source file does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("source file does not exist", ConsoleColor.Red)};
                 if (File.Exists(file2) && !overwrite)
-                    return new TerminalLine[] { new TerminalLine("destination file already exists, use -o to overwrite", ConsoleColor.Red) };
+                    return new TerminalLine[]
+                        {new TerminalLine("destination file already exists, use -o to overwrite", ConsoleColor.Red)};
 
                 try
                 {
@@ -197,11 +205,11 @@ namespace SpaceyOS
             else if (command.Command == "rm")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var file = GetFullPath(command.Parameters[0]);
                 if (!File.Exists(file))
-                    return new TerminalLine[] { new TerminalLine("file does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("file does not exist", ConsoleColor.Red)};
 
                 try
                 {
@@ -215,12 +223,13 @@ namespace SpaceyOS
             else if (command.Command == "touch")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var file = GetFullPath(command.Parameters[0]);
                 var overwrite = command.Flags.Contains("-o");
                 if (File.Exists(file) && !overwrite)
-                    return new TerminalLine[] { new TerminalLine("file already exists, use -o to overvrite", ConsoleColor.Red) };
+                    return new TerminalLine[]
+                        {new TerminalLine("file already exists, use -o to overvrite", ConsoleColor.Red)};
 
                 try
                 {
@@ -234,14 +243,13 @@ namespace SpaceyOS
             else if (command.Command == "nano")
             {
                 if (command.Parameters.Count != 1)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var file = GetFullPath(command.Parameters[0]);
                 if (!File.Exists(file))
-                    return new TerminalLine[] { new TerminalLine("file does not exist", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("file does not exist", ConsoleColor.Red)};
 
                 Process.Start(file);
-
             }
             else if (command.Command == "compile")
             {
@@ -250,36 +258,47 @@ namespace SpaceyOS
             else if (command.Command == "system")
             {
                 if (command.Parameters.Count == 0)
-                    return new TerminalLine[] { new TerminalLine("spaceyOS v0.0.1"), new TerminalLine("***ship info***"), new TerminalLine("starblitz mk1"), new TerminalLine($"{ _ship.ShipComps.Count} attached comp{(_ship.ShipComps.Count == 1 ? "" : "s")}") };
+                    return new TerminalLine[]
+                    {
+                        new TerminalLine("spaceyOS v0.0.1"), new TerminalLine("***ship info***"),
+                        new TerminalLine("starblitz mk1"),
+                        new TerminalLine(
+                            $"{_ship.ShipComps.Count} attached comp{(_ship.ShipComps.Count == 1 ? "" : "s")}")
+                    };
                 if (command.Parameters.Count == 1 && command.Parameters[0] == "comps")
                 {
                     if (_ship.ShipComps.Count == 0)
-                        return new TerminalLine[] { new TerminalLine("no comps found") };
-                    return new TerminalLine[] { new TerminalLine("***ship comps***") }.Concat(_ship.ShipComps.Select(c => new TerminalLine($"{c.GetType().Name} - {c.Id}"))).ToArray();
+                        return new TerminalLine[] {new TerminalLine("no comps found")};
+                    return new TerminalLine[] {new TerminalLine("***ship comps***")}
+                        .Concat(_ship.ShipComps.Select(c => new TerminalLine($"{c.GetType().Name} - {c.Id}")))
+                        .ToArray();
                 }
-                return new TerminalLine[] { new TerminalLine("invalid operands") };
+                return new TerminalLine[] {new TerminalLine("invalid operands")};
             }
             else if (command.Command == "comp")
             {
                 //comp <id>
                 //comp <id> attach|detach|reattach <comp_id>
                 if (command.Parameters.Count == 0)
-                    return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
 
                 var comp = _ship.ShipComps.FirstOrDefault(c => string.Compare(c.Id, command.Parameters[0], true) == 0);
                 if (comp == null)
-                    return new TerminalLine[] { new TerminalLine("comp not found", ConsoleColor.Red) };
+                    return new TerminalLine[] {new TerminalLine("comp not found", ConsoleColor.Red)};
 
                 if (command.Parameters.Count == 1)
                 {
                     var snipps = comp.Snipps.Select(kv => new TerminalLine(kv.Key));
-                    var ret = new List<TerminalLine>() {
+                    var ret = new List<TerminalLine>()
+                    {
                         new TerminalLine($"comp {comp.Id}"),
                     };
                     if (snipps.Count() == 0)
-                        return ret.Concat(new TerminalLine[] { new TerminalLine("no snipps attached") }).ToArray();
+                        return ret.Concat(new TerminalLine[] {new TerminalLine("no snipps attached")}).ToArray();
                     else
-                        return ret.Concat(new TerminalLine[] { new TerminalLine("***attached snipps***") }).Concat(snipps).ToArray();
+                        return ret.Concat(new TerminalLine[] {new TerminalLine("***attached snipps***")})
+                            .Concat(snipps)
+                            .ToArray();
                 }
 
                 if (command.Parameters.Count == 3)
@@ -287,17 +306,17 @@ namespace SpaceyOS
                     if (command.Parameters[1] == "attach")
                     {
                         if (comp.Snipps.ContainsKey(command.Parameters[2]))
-                            return new TerminalLine[] { new TerminalLine("comp already attached, use detach|reattach instead") };
+                            return new TerminalLine[]
+                                {new TerminalLine("comp already attached, use detach|reattach instead")};
 
                         if (!AttachSnippToComp(_ship, comp, command.Parameters[2]))
-                            return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
+                            return new TerminalLine[] {new TerminalLine("snipp not found, check the name")};
                         return new TerminalLine[0];
-
                     }
                     if (command.Parameters[1] == "detach")
                     {
                         if (!comp.Snipps.ContainsKey(command.Parameters[2]))
-                            return new TerminalLine[] { new TerminalLine("attached snipp not found") };
+                            return new TerminalLine[] {new TerminalLine("attached snipp not found")};
 
                         comp.Snipps.Remove(command.Parameters[2]);
                         return new TerminalLine[0];
@@ -308,18 +327,28 @@ namespace SpaceyOS
                             comp.Snipps.Remove(command.Parameters[2]);
 
                         if (!AttachSnippToComp(_ship, comp, command.Parameters[2]))
-                            return new TerminalLine[] { new TerminalLine("snipp not found, check the name") };
+                            return new TerminalLine[] {new TerminalLine("snipp not found, check the name")};
                         return new TerminalLine[0];
                     }
                 }
-                return new TerminalLine[] { new TerminalLine("invalid number of operands", ConsoleColor.Red) };
+                return new TerminalLine[] {new TerminalLine("invalid number of operands", ConsoleColor.Red)};
+            }
+            else if (command.Command == "help")
+            {
+                return new TerminalLine[]
+                {
+                    new TerminalLine("***available commands***"),
+                    new TerminalLine("file system: ls, mkdir, rmdir, cd, cp, mv, rm, touch, nano"),
+                    new TerminalLine("ship systems: compile, system, comp"),
+                    new TerminalLine("testing: test"),
+                };
             }
             else if (command.Command == "test")
             {
                 _ship.GotHit();
             }
             else
-                return new TerminalLine[] { new TerminalLine("command not find", ConsoleColor.Red) };
+                return new TerminalLine[] {new TerminalLine("command not find", ConsoleColor.Red)};
             return new TerminalLine[0];
         }
 
@@ -333,9 +362,11 @@ namespace SpaceyOS
 
         TerminalLine[] HandleIoError(Exception e)
         {
-            return new TerminalLine[] {
+            return new TerminalLine[]
+            {
                 new TerminalLine("operation failed", ConsoleColor.Red),
-                new TerminalLine(e.Message.Replace(_rootDirectory.FullName, "").Replace(@"\", "/"), ConsoleColor.Red) };
+                new TerminalLine(e.Message.Replace(_rootDirectory.FullName, "").Replace(@"\", "/"), ConsoleColor.Red)
+            };
         }
 
         void Compile()
@@ -346,7 +377,7 @@ namespace SpaceyOS
 
         bool AttachSnippToComp(ISpaceShip ship, IComp comp, string name)
         {
-            var snipp = (ISnipp)_compiler.CreateInstance(name);
+            var snipp = (ISnipp) _compiler.CreateInstance(name);
             if (snipp == null)
                 return false;
             snipp.SpaceShip = ship;
@@ -372,7 +403,7 @@ namespace SpaceyOS
                 firstSpace = line.Length;
 
 
-            var parts = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).AsEnumerable();
+            var parts = line.Split(new char[] {' '}, StringSplitOptions.RemoveEmptyEntries).AsEnumerable();
 
             command.Command = parts.FirstOrDefault();
             if (command.Command == null)
@@ -397,12 +428,14 @@ namespace SpaceyOS
         {
             Text = text;
         }
+
         public TerminalLine(string text, ConsoleColor foregroundColor)
         {
             Text = text;
             ForegroundColor = foregroundColor;
             OverwriteColour = true;
         }
+
         public TerminalLine(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
         {
             Text = text;
@@ -410,6 +443,5 @@ namespace SpaceyOS
             BackgroundColor = backgroundColor;
             OverwriteColour = true;
         }
-
     }
 }

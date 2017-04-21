@@ -18,6 +18,9 @@ namespace SpaceyOS
 
         Assembly Compile()
         {
+            if (filenames.Count == 0)
+                return null;
+
             Dictionary<string, string> providerOptions = new Dictionary<string, string>
                 {
                     {"CompilerVersion", "v3.5"}
@@ -63,6 +66,8 @@ namespace SpaceyOS
 
         public object CreateInstance(string className)
         {
+            if (assembly == null)
+                return null;
             var o = assembly.CreateInstance(className);
             return o;
         }
